@@ -10,6 +10,7 @@ A filemanager for the web based on MooTools that allows you to (pre)view, upload
 * [Christoph Pojer](http://cpojer.net)
 * [Fabian Vogelsteller](http://frozeman.de)
 * [Ger Hobbelt](http://hobbelt.com / http://hebbut.net)
+* [Patikule](http://www.partikule.net)
 
 ### Features
 
