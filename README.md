@@ -3,14 +3,18 @@ MooTools FileManager
 
 A filemanager for the web based on MooTools that allows you to (pre)view, upload and modify files and folders via your browser.
 
-![Screenshot](https://github.com/frozeman/mootools-filemanager/raw/master/screenshot.png)
+![Screenshot](https://github.com/partikule/mootools-filemanager/raw/master/screenshot.png)
+
+### Targets of the Partikule's Fork
+
+* Make the Filemanager more easier to setup and use
 
 ### Authors
 
 * [Christoph Pojer](http://cpojer.net)
 * [Fabian Vogelsteller](http://frozeman.de)
 * [Ger Hobbelt](http://hobbelt.com / http://hebbut.net)
-* [Patikule](http://www.partikule.net)
+* [Partikule](http://www.partikule.net)
 
 ### Features
 
