@@ -20,7 +20,7 @@ FileManager.implement({
 		resizeImages: true,
 		upload: true,
 		uploadAuthData: {},            // deprecated; use FileManager.propagateData instead!
-		uploadTimeLimit: 260,
+		uploadTimeLimit: 300,
 		uploadFileSizeMax: 2600 * 2600 * 25
 	},
 
@@ -33,20 +33,16 @@ FileManager.implement({
 
 		cleanup: {
 			upload: function() {
+
 				if (!this.options.upload || !this.upload) return;
 
-				if (this.upload.uploader) {
-					this.upload.uploader.fade(0).get('tween').chain(function() {
-						this.element.dispose();
-					});
-				}
+				if (this.upload.uploader) this.upload.uploader.dispose();
+				if (this.upload.button)	this.upload.button.dispose();
+				if (this.upload.list)	this.upload.list.dispose();
+				if (this.swf.box) this.swf.box.dispose();
 			}
 		}
 	},
-
-	lastFileUploaded: null,  // name of the last successfully uploaded file; will be preselected in the list view
-	error_count: 0,
-
 
 	onDialogOpenWhenUpload: function() {
 		if (this.swf && this.swf.box) this.swf.box.setStyle('visibility', 'hidden');
@@ -81,7 +77,9 @@ FileManager.implement({
 			uploader: new Element('div', {opacity: 0, 'class': 'filemanager-uploader-area'}).adopt(
 				new Element('h2', {text: this.language.upload}),
 				new Element('div', {'class': 'filemanager-uploader'})
-			)
+			),
+			lastFileUploaded: null,  // name of the last successfully uploaded file; will be preselected in the list view
+			error_count: 0
 		};
 		this.upload.uploader.getElement('div').adopt(this.upload.list);
 
@@ -148,10 +146,10 @@ FileManager.implement({
 				});
 
 				this.ui = {};
-				this.ui.icon = new Asset.image(self.assetBasePath+'Images/Icons/' + this.extension + '.png', {
+				this.ui.icon = new Asset.image(self.URLpath4assets+'Images/Icons/' + this.extension + '.png', {
 					'class': 'icon',
 					onerror: function() {
-						new Asset.image(self.assetBasePath + 'Images/Icons/default.png').replaces(this);
+						new Asset.image(self.URLpath4assets + 'Images/Icons/default.png').replaces(this);
 					}
 				});
 				this.ui.element = new Element('li', {'class': 'file', id: 'file-' + this.id});
@@ -164,14 +162,14 @@ FileManager.implement({
 				this.ui.size = new Element('span', {'class': 'file-size', text: Swiff.Uploader.formatUnit(this.size, 'b')});
 
 				var file = this;
-				this.ui.cancel = new Asset.image(self.assetBasePath+'Images/cancel.png', {'class': 'file-cancel', title: self.language.cancel}).addEvent('click', function() {
+				this.ui.cancel = new Asset.image(self.URLpath4assets+'Images/cancel.png', {'class': 'file-cancel', title: self.language.cancel}).addEvent('click', function() {
 					file.remove();
 					self.tips.hide();
 					self.tips.detach(this);
 				});
 				self.tips.attach(this.ui.cancel);
 
-				var progress = new Element('img', {'class': 'file-progress', src: self.assetBasePath+'Images/bar.gif'});
+				var progress = new Element('img', {'class': 'file-progress', src: self.URLpath4assets+'Images/bar.gif'});
 
 				this.ui.element.adopt(
 					this.ui.cancel,
@@ -197,11 +195,11 @@ FileManager.implement({
 
 				// when all items in the list have been cancelled/removed, and the transmission of the files is done, i.e. after the onComplete has fired, destroy the list!
 				var cnt = self.upload.list.getElements('li').length;
-				if (cnt == 0 && this.has_completed)
+
+//				if (cnt == 0 && this.has_completed)
+				if (cnt == 0 )
 				{
-					self.upload.uploader.fade(0).get('tween').chain(function() {
-						self.upload.uploader.setStyle('display', 'none');
-					});
+					self.upload.uploader.setStyle('display', 'none');
 				}
 			},
 
@@ -275,7 +273,7 @@ FileManager.implement({
 
 				if (failure)
 				{
-					self.error_count++;
+					self.upload.error_count++;
 				}
 
 				// don't wait for the cute delays to start updating the directory view!
@@ -302,11 +300,9 @@ FileManager.implement({
 		};
 
 		this.diag.log('Uploader: SWF init');
-		this.lastFileUploaded = null;
-		this.error_count = 0;
 		this.swf = new Swiff.Uploader({
 			id: 'SwiffFileManagerUpload',
-			path: this.assetBasePath + 'Swiff.Uploader.swf',
+			path: this.URLpath4assets + 'Swiff.Uploader.swf',
 			queued: false,
 			target: this.upload.button,
 			allowDuplicates: true,
@@ -321,7 +317,7 @@ FileManager.implement({
 			timeLimit: self.options.uploadTimeLimit,
 			fileSizeMax: self.options.uploadFileSizeMax,
 			typeFilter: this.getFileTypes(),
-			zIndex: this.options.zIndex + 3000,
+			zIndex: this.options.zIndex + 400000,
 			onSelectSuccess: function() {
 				self.diag.log('FlashUploader: onSelectSuccess', arguments, ', fileList: ', self.swf.fileList);
 				//self.fillInfo();
@@ -339,17 +335,16 @@ FileManager.implement({
 				this.diag.log('upload:onComplete', info, cnt, fcnt);
 				// add a 5 second delay when there were upload errors:
 				(function() {
-					this.onShow = true;
-					this.load(this.CurrentDir.path, this.lastFileUploaded);
+					this.load(this.CurrentDir.path, this.upload.lastFileUploaded);
 					// this.fillInfo();
-				}).bind(this).delay(this.error_count > 0 ? 5500 : 1);
+				}).bind(this).delay(this.upload.error_count > 0 ? 5500 : 1);
 			}.bind(this),
 			onFileComplete: function(f) {
 				self.diag.log('FlashUploader: onFileComplete', arguments, ', fileList: ', self.swf.fileList);
-				self.lastFileUploaded = f.name;
+				self.upload.lastFileUploaded = f.name;
 			},
 			onFail: function(error) {
-				self.diag.log('FlashUploader: onFail', arguments, ', fileList: ', self.swf.fileList);
+				self.diag.log('FlashUploader: onFail', arguments, ', swf: ', self.swf, ', fileList: ', (typeof self.swf !== 'undefined' ? self.swf : '---'));
 				if (error !== 'empty') {
 					$$(self.upload.button, self.upload.label).dispose();
 					self.showError(self.language.flash[error] || self.language.flash.flash);

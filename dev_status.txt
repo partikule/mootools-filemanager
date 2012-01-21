@@ -1,0 +1,5 @@
+
+Line 2428 : 
+// Store thumb 250 path in meta with getThumb
+// or try to get it through 
+//	 $thumbPath = $meta->getThumbPath($width . 'x' . $height);
